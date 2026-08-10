@@ -4,6 +4,11 @@ from bson.objectid import ObjectId
 from dotenv import load_dotenv
 import certifi
 import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+# Define India time
+IST = ZoneInfo("Asia/Kolkata")
 
 # Load env vars
 load_dotenv()
@@ -15,6 +20,25 @@ app.secret_key = os.getenv("SECRET_KEY")
 # Use certifi CA bundle explicitly for cross-platform TLS reliability
 # (notably fixes common macOS certificate verification failures).
 mongo = PyMongo(app, tlsCAFile=certifi.where())
+
+#ping mongodb and validate health
+
+@app.route('/health')
+def health_check():
+    try:
+        mongo.db.command('ping')
+        return {
+            "Status": "healthy",
+            "database": "connected",
+            "timestamp": datetime.now(IST).isoformat() + " - IST"
+        }, 200
+    except Exception as e:
+        return {
+            "Status": "unhealthy",
+            "database": "not connected",
+            "error": str(e),
+            "timestamp": datetime.now(IST).isoformat() + " - IST"
+        }, 503
 
 # Home page -> list students
 @app.route('/')
