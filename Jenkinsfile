@@ -19,7 +19,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                sh 'echo "Commit SHA: ${COMMIT_SHA}"'
+                sh 'echo "Build ${BUILD_NUMBER} | Commit: ${COMMIT_SHA}"'
             }
         }
 
@@ -33,7 +33,7 @@ pipeline {
             }
         }
 
-        stage ('Tests') {
+        stage('Test') {
             steps {
                 sh '''
                     export MONGO_URI="mongodb://localhost:27017/test_student_db"
@@ -43,7 +43,7 @@ pipeline {
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'test_output.txt', allowEmptyArchieve: true
+                    archiveArtifacts artifacts: 'test_output.txt', allowEmptyArchive: true
                 }
             }
         }
@@ -81,24 +81,22 @@ pipeline {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << REMOTE
-                        set -e
-                        # Login to ECR
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-                        
-                        # Pull the commit-SHA tagged image
-                        docker pull ${FULL_IMAGE}
-                        
-                        # Stop and remove old container
-                        docker stop student-reg || true
-                        docker rm student-reg || true
-                        
-                        # Run new container with Atlas connection
-                        docker run -d -p 5000:5000 -e MONGO_URI="${MONGO_URI}" \\
-                            -e SECRET_KEY="${SECRET_KEY}" \\
-                            --name student-reg \\
-                            ${FULL_IMAGE}
-                        
-                        # Cleanup dangling images
+                            set -e
+                            
+                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                            
+                            docker pull ${FULL_IMAGE}
+                            
+                            docker stop student-reg || true
+                            docker rm student-reg || true
+                            
+                            docker run -d \\
+                                -p 5000:5000 \\
+                                -e MONGO_URI="${MONGO_URI}" \\
+                                -e SECRET_KEY="${SECRET_KEY}" \\
+                                --name student-reg \\
+                                ${FULL_IMAGE}
+                            
                             docker system prune -f
                         REMOTE
                     """
@@ -106,40 +104,44 @@ pipeline {
             }
         }
 
-        stage('verify') {
+        stage('Verify') {
             steps {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << REMOTE
                             echo "Polling /health endpoint..."
                             for i in 1 2 3 4 5; do
-                                echo "Attempt \$i..."
+                                echo "Attempt \\$i..."
                                 if curl -sf http://localhost:5000/health > /dev/null; then
-                                    echo "✅ HEALTH CHECK PASSED"
+                                    echo "HEALTH CHECK PASSED"
                                     exit 0
                                 fi
                                 sleep 5
                             done
-                            echo "❌ HEALTH CHECK FAILED after 5 attempts"
+                            echo "HEALTH CHECK FAILED after 5 attempts"
                             docker logs student-reg || true
                             exit 1
                         REMOTE
                     """
                 }
             }
-        }    
+        }
     }
+
     post {
         always {
-            env.BUILD_STATUS = currentBuild.result ?: 'SUCCESS'
+            script {
+                env.BUILD_STATUS = currentBuild.result ?: 'SUCCESS'
+            }
+            sh '''
+                export BUILD_STATUS="${BUILD_STATUS}"
+                export BUILD_NUMBER="${BUILD_NUMBER}"
+                export BUILD_URL="${BUILD_URL}"
+                export JOB_NAME="${JOB_NAME}"
+                export SENDGRID_API_KEY=$(cat /run/secrets/sendgrid-api-key 2>/dev/null || echo "")
+                python3 scripts/email_report.py || true
+            '''
+            cleanWs()
         }
-        sh '''
-            export BUILD_STATUS="${BUILD_STATUS}"
-            export BUILD_NUMBER="${BUILD_NUMBER}"
-            export BUILD_URL="${BUILD_URL}"
-            export JOB_NAME="${JOB_NAME}"
-            python3 scripts/email_report.py || true
-        '''
-        cleanWS()
     }
 }
