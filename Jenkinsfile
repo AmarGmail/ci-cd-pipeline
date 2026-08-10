@@ -78,9 +78,9 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << REMOTE
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'REMOTE'
                             set -e
                             
                             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
@@ -106,9 +106,9 @@ pipeline {
 
         stage('Verify') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << REMOTE
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'REMOTE'
                             echo "Polling /health endpoint..."
                             for i in 1 2 3 4 5; do
                                 echo "Attempt \\$i..."
@@ -133,14 +133,22 @@ pipeline {
             script {
                 env.BUILD_STATUS = currentBuild.result ?: 'SUCCESS'
             }
-            sh '''
-                export BUILD_STATUS="${BUILD_STATUS}"
-                export BUILD_NUMBER="${BUILD_NUMBER}"
-                export BUILD_URL="${BUILD_URL}"
-                export JOB_NAME="${JOB_NAME}"
-                export SENDGRID_API_KEY=$(cat /run/secrets/sendgrid-api-key 2>/dev/null || echo "")
-                python3 scripts/email_report.py || true
-            '''
+            withCredentials([
+                string(credentialsId: 'sendgrid-api-key', variable: 'SENDGRID_API_KEY'),
+                string(credentialsId: 'email-to', variable: 'EMAIL_TO'),
+                string(credentialsId: 'email-from', variable: 'EMAIL_FROM')
+            ]) {
+                sh '''
+                    export BUILD_STATUS="${BUILD_STATUS}"
+                    export BUILD_NUMBER="${BUILD_NUMBER}"
+                    export BUILD_URL="${BUILD_URL}"
+                    export JOB_NAME="${JOB_NAME}"
+                    export SENDGRID_API_KEY="${SENDGRID_API_KEY}"
+                    export EMAIL_TO="${EMAIL_TO}"
+                    export EMAIL_FROM="${EMAIL_FROM}"
+                    python3 scripts/email_report.py || true
+                '''
+            }
             cleanWs()
         }
     }

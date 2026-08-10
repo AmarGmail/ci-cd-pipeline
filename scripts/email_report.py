@@ -1,7 +1,7 @@
 import os
 import sys
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
 EMAIL_TO = os.environ.get('EMAIL_TO')
@@ -12,22 +12,20 @@ BUILD_URL = os.environ.get('BUILD_URL', '')
 JOB_NAME = os.environ.get('JOB_NAME', 'student-registration')
 BUILD_STATUS = os.environ.get('BUILD_STATUS', 'SUCCESS')
 
-# Determine styling
-if BUILD_STATUS == 'SUCCESS':
+status = 'SUCCESS'
+if BUILD_STATUS == 'FAILURE':
+    status = 'FAILURE'
+
+if status == 'SUCCESS':
     emoji = '✅'
     color = '#22c55e'
     subject = f'{emoji} Build #{BUILD_NUMBER} SUCCESS — {JOB_NAME}'
-elif BUILD_STATUS == 'FAILURE':
+else:
     emoji = '❌'
     color = '#ef4444'
     subject = f'{emoji} Build #{BUILD_NUMBER} FAILED — {JOB_NAME}'
-else:
-    emoji = '⚠️'
-    color = '#f59e0b'
-    subject = f'{emoji} Build #{BUILD_NUMBER} {BUILD_STATUS} — {JOB_NAME}'
 
-html = f"""
-<!DOCTYPE html>
+html = f"""<!DOCTYPE html>
 <html>
 <head>
 <style>
@@ -47,10 +45,9 @@ a {{ color: #3b82f6; text-decoration: none; }}
     <p>{JOB_NAME}</p>
   </div>
   <div class="content">
-    <div class="detail"><strong>Status:</strong> <span style="color:{color};font-weight:bold;">{BUILD_STATUS}</span></div>
+    <div class="detail"><strong>Status:</strong> <span style="color:{color};font-weight:bold;">{status}</span></div>
     <div class="detail"><strong>Build #:</strong> {BUILD_NUMBER}</div>
-    <div class="detail"><strong>Commit SHA:</strong> {os.environ.get('COMMIT_SHA', 'N/A')}</div>
-    <div class="detail"><strong>Timestamp:</strong> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</div>
+    <div class="detail"><strong>Timestamp:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</div>
     <div class="detail"><strong>Build URL:</strong> <a href="{BUILD_URL}">{BUILD_URL}</a></div>
   </div>
   <div class="footer">
@@ -58,8 +55,7 @@ a {{ color: #3b82f6; text-decoration: none; }}
   </div>
 </div>
 </body>
-</html>
-"""
+</html>"""
 
 url = "https://api.sendgrid.com/v3/mail/send"
 headers = {
