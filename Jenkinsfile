@@ -27,20 +27,19 @@ pipeline {
             steps {
                 sh '''
                     python3 -m venv venv
-                    . venv/bin/activate
-                    pip install --upgrade pip
-                    pip install -r requirements.txt
-                    pip install pytest mongomock
+                    venv/bin/pip install --upgrade pip
+                    venv/bin/pip install -r requirements.txt
                 '''
             }
         }
 
         stage ('Tests') {
             steps {
-                . venv/bin/activate
-                export MONGO_URI="mongodb://localhost:27017/test_student_db"
-                export SECRET_KEY="test-secret-key"
-                pytest test_app.py -v --tb=short 2>&1 | tee test_output.txt
+                sh '''
+                    export MONGO_URI="mongodb://localhost:27017/test_student_db"
+                    export SECRET_KEY="test-secret-key"
+                    venv/bin/pytest test_app.py -v --tb=short 2>&1 | tee test_output.txt
+                '''
             }
             post {
                 always {
@@ -112,11 +111,11 @@ pipeline {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                         ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << REMOTE
-                                                    echo "Polling /health endpoint..."
+                            echo "Polling /health endpoint..."
                             for i in 1 2 3 4 5; do
                                 echo "Attempt \$i..."
                                 if curl -sf http://localhost:5000/health > /dev/null; then
-                                                echo "✅ HEALTH CHECK PASSED"
+                                    echo "✅ HEALTH CHECK PASSED"
                                     exit 0
                                 fi
                                 sleep 5
