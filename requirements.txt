@@ -7,3 +7,4 @@ pylint
 bandit
 black
 gunicorn
+mongomock

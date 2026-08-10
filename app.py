@@ -19,7 +19,12 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 # Use certifi CA bundle explicitly for cross-platform TLS reliability
 # (notably fixes common macOS certificate verification failures).
-mongo = PyMongo(app, tlsCAFile=certifi.where())
+# mongo = PyMongo(app, tlsCAFile=certifi.where())
+# TLS only for Atlas (+srv), plain for local dev/tests
+if app.config["MONGO_URI"].startswith("mongodb+srv://"):
+    mongo = PyMongo(app, tlsCAFile=certifi.where())
+else:
+    mongo = PyMongo(app)
 
 #ping mongodb and validate health
 
