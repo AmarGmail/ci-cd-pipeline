@@ -435,7 +435,10 @@ Add all 9 credentials:
 
 ---
 
-## Step 9: Pipeline Stages Explained
+## Step 9: Pipeline Stages
+
+![Jenkins Pipeline Overview](screenshots/Build_Pipeline_Stages.jpg)
+
 
 The pipeline (`Jenkinsfile`) consists of 8 automated stages:
 
@@ -514,6 +517,10 @@ curl http://<EC2_PUBLIC_IP>:5000/health
 # Test the application
 curl http://<EC2_PUBLIC_IP>:5000/
 ```
+
+### Email Verification
+
+![Email Verification](screenshots/Build-Success-Report-Email.jpg)
 
 ---
 
