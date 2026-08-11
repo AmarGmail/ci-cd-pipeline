@@ -14,10 +14,15 @@ pipeline {
         MONGO_URI       = credentials('mongo-uri')
         SECRET_KEY      = credentials('flask-secret-key')
     }
-    echo "------------------------"
-    echo $MONGO_URI
+
 
     stages {
+        //CHecking mongodb uri passing from jenkins credentials
+        stage('Debug: Print MongoDB URI') {
+            steps {
+                sh 'echo "MONGO_URI=${MONGO_URI}"'
+            }
+        }
         stage('Checkout') {
             steps {
                 checkout scm
