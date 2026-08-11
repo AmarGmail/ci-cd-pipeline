@@ -61,7 +61,3 @@ def test_delete_student(client):
     response = client.get(f'/delete/{student_id}', follow_redirects=True)
     assert response.status_code == 200
     assert b"Temp User" not in response.data
-
-def test_intentional_failure(client):
-    """Intentional failure to test email notification"""
-    assert False, "This test is designed to fail for pipeline testing"

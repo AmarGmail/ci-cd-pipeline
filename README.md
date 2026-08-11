@@ -18,8 +18,9 @@ A fully automated CI/CD pipeline that deploys a Flask + MongoDB Student Registra
 10. [Step 8: GitHub Webhook Configuration](#step-8-github-webhook-configuration)
 11. [Step 9: Pipeline Stages Explained](#step-9-pipeline-stages-explained)
 12. [Step 10: Trigger & Monitor](#step-10-trigger--monitor)
-13. [Troubleshooting](#troubleshooting)
-14. [Project Structure](#project-structure)
+13. [Step 11: Intentional Pipeline Failed at Test Stage](#step-11-build-failed)
+14. [Troubleshooting](#troubleshooting)
+15. [Project Structure](#project-structure)
 
 ---
 
@@ -499,6 +500,11 @@ curl http://<EC2_PUBLIC_IP>:5000/
 
 ---
 
+## Step 11: Intentional Pipeline Failed at Test Stage
+
+![Forced build failure email](screenshots/Intentional-build-failed-at-test-stage.jpg)
+
+---
 ## Troubleshooting
 
 | Issue | Cause | Solution |
