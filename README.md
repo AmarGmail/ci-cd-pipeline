@@ -172,7 +172,7 @@ docker run -d \
 curl http://localhost:5000/health or
 ```
 
-![App health status(local)](screentshots/Manual_run_app_health_local.jpg)
+![App health status](screentshots/Manual_run_app_health_local.jpg)
 
 ---
 
