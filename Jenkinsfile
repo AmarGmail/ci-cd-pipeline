@@ -78,6 +78,8 @@ pipeline {
             }
         }
 
+        // The deploy stage calling a script to perform the deployment tasks
+        // To avoid interpolation confusion between groovy to local shell to EC2 shell
         stage('Deploy to EC2') {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
@@ -102,11 +104,13 @@ pipeline {
                             SECRET_KEY='${SECRET_KEY}' \
                             /tmp/deploy_to_ec2.sh"
 
-                                            '''
+                    '''
                 }
             }
         }
 
+        // define scripts/health_check.sh 
+        // copy to ec2 are run from there
         stage('Verify') {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
