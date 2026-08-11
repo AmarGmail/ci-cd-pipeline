@@ -60,6 +60,7 @@ pipeline {
             }
         }
 
+        // AWS start
         stage('Push to ECR') {
             steps {
                 withCredentials([

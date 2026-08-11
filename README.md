@@ -134,6 +134,7 @@ pytest test_app.py -v
 ```
 
 Expected output: **4 passed**
+![Test Case Results](screenshots/local_test_results.jpg)
 
 ---
 
@@ -149,8 +150,6 @@ Create [Dockerfile](Dockerfile) in the project root:
 
 ### 3.3 Build & Test Locally
 
-![Test Case Results](screenshots/local_test_results.jpg)
-
 ```bash
 # Build image
 docker build -t student-reg:latest .
@@ -164,7 +163,8 @@ docker run -d \
   student-reg:latest
 
 # Verify
-curl http://localhost:5000/health
+curl http://localhost:5000/health or
+![App health status(local)](screentshots/Manual_run_app_health_local.jpg)
 ```
 
 ---
@@ -520,6 +520,7 @@ ci-cd-pipeline/
 ├── templates/
 │   ├── base.html            # Base HTML template
 │   └── index.html           # Student list page
+├── screenshots/             # Add the screenshots here
 ├── app.py                   # Flask application
 ├── Dockerfile               # Docker image definition
 ├── docker-compose.yml       # (Optional) Local compose setup
