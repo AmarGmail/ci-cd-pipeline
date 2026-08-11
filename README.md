@@ -508,10 +508,11 @@ To verify that the pipeline correctly stops and sends a failure email when tests
 
 Add this to `test_app.py`:
 
-```python
+```
 def test_intentional_failure(client):
     """Intentional failure to test email notification"""
     assert False, "This test is designed to fail for pipeline testing"
+```
 
 ![Forced build failure email](screenshots/Intentional-build-failed-at-test-stage.jpg)
 
