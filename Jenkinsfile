@@ -83,42 +83,26 @@ pipeline {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh '''
 
-                        echo "Logging into ECR..."
-                        ssh -o StrictHostKeyChecking=no \
-                            "${EC2_USER}@${EC2_HOST}" \
-                            "aws ecr get-login-password --region '${AWS_REGION}' | 
-                            docker login --username AWS --password-stdin '${ECR_REGISTRY}'"
+                        echo "Copying deployment script to EC2..."
 
-                        echo "Pulling image from ECR..."   
-                        ssh -o StrictHostKeyChecking=no \
-                            "${EC2_USER}@${EC2_HOST}" \
-                            "docker pull '${FULL_IMAGE}'"
+                        scp -o StrictHostKeyChecking=no \
+                            scripts/deploy_to_ec2.sh \
+                            "${EC2_USER}@${EC2_HOST}:/tmp/deploy_to_ec2.sh"
 
-                         echo "Stopping existing container..."   
-                        ssh -o StrictHostKeyChecking=no \
-                            "${EC2_USER}@${EC2_HOST}" \
-                            "docker stop student-reg || true; docker rm student-reg || true"
+                        echo "Running deployment script on EC2..."
 
-                        echo "Starting new container..."    
-                        ssh -o StrictHostKeyChecking=no \
-                            "${EC2_USER}@${EC2_HOST}" \
-                            "docker run -d \
-                                -p 5000:5000 \
-                                -e MONGO_URI='${MONGO_URI}' \
-                                -e SECRET_KEY='${SECRET_KEY}' \
-                                --name student-reg \
-                                '${FULL_IMAGE}'"    
-                        
-                        echo "checking container status ..."
-                        ssh -o StrictHostKeyChecking=no \
-                            "${EC2_USER}@${EC2_HOST}" \
-                            "docker ps -a --filter name=student-reg"
 
-                        echo "container logs..."
                         ssh -o StrictHostKeyChecking=no \
                             "${EC2_USER}@${EC2_HOST}" \
-                            "docker logs student-reg || true"
-                    '''
+                            "chmod +x /tmp/deploy_to_ec2.sh && \
+                            AWS_REGION='${AWS_REGION}' \
+                            ECR_REGISTRY='${ECR_REGISTRY}' \
+                            FULL_IMAGE='${FULL_IMAGE}' \
+                            MONGO_URI='${MONGO_URI}' \
+                            SECRET_KEY='${SECRET_KEY}' \
+                            /tmp/deploy_to_ec2.sh"
+
+                                            '''
                 }
             }
         }
