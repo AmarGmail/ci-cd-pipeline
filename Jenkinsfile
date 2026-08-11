@@ -14,6 +14,8 @@ pipeline {
         MONGO_URI       = credentials('mongo-uri')
         SECRET_KEY      = credentials('flask-secret-key')
     }
+    echo "------------------------"
+    echo $MONGO_URI
 
     stages {
         stage('Checkout') {
@@ -79,17 +81,44 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
-                            
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker pull ${FULL_IMAGE}"
-                            
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker stop student-reg || true; docker rm student-reg || true"
-                            
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker run -d -p 5000:5000 -e MONGO_URI='${MONGO_URI}' -e SECRET_KEY='${SECRET_KEY}' --name student-reg ${FULL_IMAGE}"    
+                    sh '''
+
+                        echo "Logging into ECR..."
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "aws ecr get-login-password --region '${AWS_REGION}' | 
+                            docker login --username AWS --password-stdin '${ECR_REGISTRY}'"
+
+                        echo "Pulling image from ECR..."   
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "docker pull '${FULL_IMAGE}'"
+
+                         echo "Stopping existing container..."   
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "docker stop student-reg || true; docker rm student-reg || true"
+
+                        echo "Starting new container..."    
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "docker run -d \
+                                -p 5000:5000 \
+                                -e MONGO_URI='${MONGO_URI}' \
+                                -e SECRET_KEY='${SECRET_KEY}' \
+                                --name student-reg \
+                                '${FULL_IMAGE}'"    
                         
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker system prune -f"
-                    """
+                        echo "checking container status ..."
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "docker ps -a --filter name=student-reg"
+
+                        echo "container logs..."
+                        ssh -o StrictHostKeyChecking=no \
+                            "${EC2_USER}@${EC2_HOST}" \
+                            "docker logs student-reg || true"
+                    '''
                 }
             }
         }
