@@ -88,7 +88,7 @@ Before starting, ensure you have accounts and tools ready:
 ### 1.2 Clone Your Fork Locally
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/ci-cd-pipeline.git
+git clone https://github.com/AmarGmail/ci-cd-pipeline.git
 cd ci-cd-pipeline
 ```
 
@@ -141,49 +141,15 @@ Expected output: **4 passed**
 
 ### 3.1 Dockerfile
 
-Create `Dockerfile` in the project root:
+Create [Dockerfile](Dockerfile) in the project root:
 
-```dockerfile
-FROM python:3.12-slim
+### 3.2 Use .dockerignore to exclude and keep repo clean
+[.dockerignore](.dockerignore)
 
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y gcc && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY app.py .
-COPY templates/ ./templates/
-
-# Expose port 5000
-EXPOSE 5000
-
-# Production WSGI server
-ENV PYTHONUNBUFFERED=1
-ENV FLASK_ENV=production
-
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:app"]
-```
-
-### 3.2 .dockerignore
-
-```gitignore
-venv/
-__pycache__/
-*.pyc
-.env
-.git/
-.gitignore
-README.md
-.pytest_cache/
-.coverage
-```
 
 ### 3.3 Build & Test Locally
+
+![Test Case Results](screenshots/local_test_results.jpg)
 
 ```bash
 # Build image
@@ -226,7 +192,7 @@ curl http://localhost:5000/health
 2. Click **Add IP Address**
 3. Add your **local machine IP** (for development)
 4. Add your **EC2 public IP** (for production)
-5. Optionally add `0.0.0.0/0` for testing (remove later)
+5. Optionally add `0.0.0.0/0` for testing (remember to remove later)
 
 ### 4.4 Get Connection String
 
@@ -414,7 +380,7 @@ Add all 9 credentials:
 
 ### 8.1 Configure Webhook in GitHub
 
-1. Go to your forked repo: `https://github.com/YOUR_USERNAME/ci-cd-pipeline`
+1. Go to your forked repo: `https://github.com/AmarGmail/ci-cd-pipeline`
 2. **Settings → Webhooks → Add webhook**
 3. **Payload URL:** `https://YOUR_NGROK_URL.ngrok-free.app/github-webhook/`
 4. **Content type:** `application/json`
