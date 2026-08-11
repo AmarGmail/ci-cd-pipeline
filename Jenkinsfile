@@ -52,8 +52,8 @@ pipeline {
             steps {
                 sh '''
                     docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
-                    docker tag "${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}"
-                    docker tag "${IMAGE_NAME}:${IMAGE_TAG} ${LATEST_IMAGE}"
+                    docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${FULL_IMAGE}"
+                    docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${LATEST_IMAGE}"
                 '''
             }
         }
