@@ -18,7 +18,7 @@ A fully automated CI/CD pipeline that deploys a Flask + MongoDB Student Registra
 10. [Step 8: GitHub Webhook Configuration](#step-8-github-webhook-configuration)
 11. [Step 9: Pipeline Stages Explained](#step-9-pipeline-stages-explained)
 12. [Step 10: Trigger & Monitor](#step-10-trigger--monitor)
-13. [Step 11: Intentional Pipeline Failed at Test Stage](#step-11-build-failed)
+13. [Step 11: Intentional Pipeline Failed at Test Stage](#step-11-intentional-pipeline-failed-at-test-stage)
 14. [Troubleshooting](#troubleshooting)
 15. [Project Structure](#project-structure)
 
@@ -501,6 +501,17 @@ curl http://<EC2_PUBLIC_IP>:5000/
 ---
 
 ## Step 11: Intentional Pipeline Failed at Test Stage
+
+To verify that the pipeline correctly stops and sends a failure email when tests fail:
+
+### 11.1 Add an Intentional Failure Test
+
+Add this to `test_app.py`:
+
+```python
+def test_intentional_failure(client):
+    """Intentional failure to test email notification"""
+    assert False, "This test is designed to fail for pipeline testing"
 
 ![Forced build failure email](screenshots/Intentional-build-failed-at-test-stage.jpg)
 
