@@ -77,6 +77,12 @@ Before starting, ensure you have accounts and tools ready:
 
 ---
 
+## Final outcome
+
+![Desired Result](screenshots/Desired_result.jpg)
+
+---
+
 ## Step 1: Fork & Clone Repository
 
 ### 1.1 Fork the Original Repository
@@ -236,6 +242,8 @@ mongodb+srv://amarjyotilahkar_db_user:YOUR_PASSWORD@cluster0.xxx.mongodb.net/stu
 4. Attach policy: **`AmazonEC2ContainerRegistryReadOnly`**
 5. Role name: `student-registration-ec2-role`
 6. Click **Create role**
+
+![IAM Role policy](screenshots/IAM_Role_EC2_ECR_Read_Policy.jpg)
 
 ### 5.3 Launch EC2 Instance (Production)
 
