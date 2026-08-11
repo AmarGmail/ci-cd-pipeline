@@ -50,6 +50,7 @@ pipeline {
                 sh '''
                     export MONGO_URI="mongodb://localhost:27017/test_student_db"
                     export SECRET_KEY="test-secret-key"
+                    set -o pipefail
                     venv/bin/pytest test_app.py -v --tb=short 2>&1 | tee test_output.txt
                 '''
             }
