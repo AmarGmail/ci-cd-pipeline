@@ -17,12 +17,7 @@ pipeline {
 
 
     stages {
-        //CHecking mongodb uri passing from jenkins credentials
-        stage('Debug: Print MongoDB URI') {
-            steps {
-                sh 'echo "MONGO_URI=${MONGO_URI}"'
-            }
-        }
+        
         stage('Checkout') {
             steps {
                 checkout scm
