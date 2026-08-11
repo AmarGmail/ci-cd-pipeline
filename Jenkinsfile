@@ -23,6 +23,11 @@ pipeline {
                 checkout scm
                 sh 'echo "Build ${BUILD_NUMBER} | Commit: ${COMMIT_SHA}"'
             }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Checkout' }
+                }
+            }
         }
 
         stage('Install') {
@@ -32,6 +37,11 @@ pipeline {
                     venv/bin/pip install --upgrade pip
                     venv/bin/pip install -r requirements.txt
                 '''
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Install' }
+                }
             }
         }
 
@@ -47,6 +57,9 @@ pipeline {
                 always {
                     archiveArtifacts artifacts: 'test_output.txt', allowEmptyArchive: true
                 }
+                failure {
+                    script { env.FAILED_STAGE = 'Test' }
+                }
             }
         }
 
@@ -57,6 +70,11 @@ pipeline {
                     docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${FULL_IMAGE}"
                     docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${LATEST_IMAGE}"
                 '''
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Build' }
+                }
             }
         }
 
@@ -75,6 +93,11 @@ pipeline {
                         docker push ${FULL_IMAGE}
                         docker push ${LATEST_IMAGE}
                     """
+                }
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Push to ECR' }
                 }
             }
         }
@@ -104,8 +127,12 @@ pipeline {
                             MONGO_URI='${MONGO_URI}' \
                             SECRET_KEY='${SECRET_KEY}' \
                             /tmp/deploy_to_ec2.sh"
-
                     '''
+                }
+            }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Deploy to EC2' }
                 }
             }
         }
@@ -126,6 +153,11 @@ pipeline {
                     '''
                 }
             }
+            post {
+                failure {
+                    script { env.FAILED_STAGE = 'Verify' }
+                }
+            }
         }
     }
 
@@ -144,6 +176,9 @@ pipeline {
                     export BUILD_NUMBER="${BUILD_NUMBER}"
                     export BUILD_URL="${BUILD_URL}"
                     export JOB_NAME="${JOB_NAME}"
+                    export COMMIT_SHA="${COMMIT_SHA}"
+                    export IMAGE_TAG="${IMAGE_TAG}"
+                    export FAILED_STAGE="${FAILED_STAGE:-}"
                     export SENDGRID_API_KEY="${SENDGRID_API_KEY}"
                     export EMAIL_TO="${EMAIL_TO}"
                     export EMAIL_FROM="${EMAIL_FROM}"

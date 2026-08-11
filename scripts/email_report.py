@@ -11,6 +11,9 @@ BUILD_NUMBER = os.environ.get('BUILD_NUMBER', 'N/A')
 BUILD_URL = os.environ.get('BUILD_URL', '')
 JOB_NAME = os.environ.get('JOB_NAME', 'student-registration')
 BUILD_STATUS = os.environ.get('BUILD_STATUS', 'SUCCESS')
+COMMIT_SHA = os.environ.get('COMMIT_SHA', 'N/A')
+IMAGE_TAG = os.environ.get('IMAGE_TAG', 'N/A')
+FAILED_STAGE = os.environ.get('FAILED_STAGE', '')
 
 status = 'SUCCESS'
 if BUILD_STATUS == 'FAILURE':
@@ -24,6 +27,15 @@ else:
     emoji = '❌'
     color = '#ef4444'
     subject = f'{emoji} Build #{BUILD_NUMBER} FAILED — {JOB_NAME}'
+
+# Build failed stage HTML only if failure occurred
+failed_stage_html = ''
+if status == 'FAILURE' and FAILED_STAGE:
+    failed_stage_html = f'''
+    <div class="detail" style="background: #fef2f2; border-left-color: #ef4444;">
+        <strong>Failed Stage:</strong> <span style="color: #ef4444; font-weight: bold;">{FAILED_STAGE}</span>
+    </div>
+    '''
 
 html = f"""<!DOCTYPE html>
 <html>
@@ -47,6 +59,9 @@ a {{ color: #3b82f6; text-decoration: none; }}
   <div class="content">
     <div class="detail"><strong>Status:</strong> <span style="color:{color};font-weight:bold;">{status}</span></div>
     <div class="detail"><strong>Build #:</strong> {BUILD_NUMBER}</div>
+    <div class="detail"><strong>Commit SHA:</strong> <code>{COMMIT_SHA}</code></div>
+    <div class="detail"><strong>Image Tag:</strong> <code>{IMAGE_TAG}</code></div>
+    {failed_stage_html}
     <div class="detail"><strong>Timestamp:</strong> {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</div>
     <div class="detail"><strong>Build URL:</strong> <a href="{BUILD_URL}">{BUILD_URL}</a></div>
   </div>

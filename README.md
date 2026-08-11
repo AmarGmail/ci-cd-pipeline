@@ -170,8 +170,9 @@ docker run -d \
 
 # Verify
 curl http://localhost:5000/health or
-![App health status(local)](screentshots/Manual_run_app_health_local.jpg)
 ```
+
+![App health status(local)](screentshots/Manual_run_app_health_local.jpg)
 
 ---
 
@@ -593,4 +594,4 @@ This project is for educational purposes as part of a CI/CD DevOps assignment.
 
 ---
 
-**End-to-End CI/CD Pipeline: Git Push → Jenkins → Docker → ECR → EC2 → Health Check → Email Report** 🚀
+**End-to-End CI/CD Pipeline: Git Push → Jenkins → Docker → ECR → EC2 → Health Check → Email Report**
