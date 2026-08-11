@@ -50,11 +50,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh """
-                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}
-                    docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${LATEST_IMAGE}
-                """
+                sh '''
+                    docker build -t "${IMAGE_NAME}:${IMAGE_TAG}" .
+                    docker tag "${IMAGE_NAME}:${IMAGE_TAG} ${FULL_IMAGE}"
+                    docker tag "${IMAGE_NAME}:${IMAGE_TAG} ${LATEST_IMAGE}"
+                '''
             }
         }
 
@@ -97,23 +97,15 @@ pipeline {
         stage('Verify') {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 
-                        "echo 'Polling /health endpoint...' 
-                        for i in 1 2 3 4 5 
-                        do 
-                            echo Attempt \\$i... 
-                            if curl -sf http://localhost:5000/health > /dev/null 
-                            then 
-                                echo 'HEALTH CHECK PASSED'
-                                exit 0
-                            fi 
-                            sleep 5
-                        done 
-                        echo 'HEALTH CHECK FAILED' 
-                        docker logs student-reg || true 
-                        exit 1"
-                    """
+                    sh '''
+                        scp -o StrictHostKeyChecking=no \
+                            scripts/health_check.sh \
+                            "$EC2_USER@$EC2_HOST:/tmp/health_check.sh"
+
+                        ssh -o StrictHostKeyChecking=no \
+                            "$EC2_USER@$EC2_HOST" \
+                            "chmod +x /tmp/health_check.sh && /tmp/health_check.sh" 
+                    '''
                 }
             }
         }
