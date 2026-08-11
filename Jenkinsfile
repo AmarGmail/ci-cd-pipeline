@@ -80,25 +80,15 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'REMOTE'
-                            set -e
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
                             
-                            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker pull ${FULL_IMAGE}"
                             
-                            docker pull ${FULL_IMAGE}
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker stop student-reg || true; docker rm student-reg || true"
                             
-                            docker stop student-reg || true
-                            docker rm student-reg || true
-                            
-                            docker run -d \\
-                                -p 5000:5000 \\
-                                -e MONGO_URI="${MONGO_URI}" \\
-                                -e SECRET_KEY="${SECRET_KEY}" \\
-                                --name student-reg \\
-                                ${FULL_IMAGE}
-                            
-                            docker system prune -f
-                        REMOTE
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker run -d -p 5000:5000 -e MONGO_URI='${MONGO_URI}' -e SECRET_KEY='${SECRET_KEY}' --name student-reg ${FULL_IMAGE}"    
+                        
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "docker system prune -f"
                     """
                 }
             }
@@ -108,20 +98,21 @@ pipeline {
             steps {
                 sshagent(credentials: ['ec2-ssh-key']) {
                     sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} << 'REMOTE'
-                            echo "Polling /health endpoint..."
-                            for i in 1 2 3 4 5; do
-                                echo "Attempt \\$i..."
-                                if curl -sf http://localhost:5000/health > /dev/null; then
-                                    echo "HEALTH CHECK PASSED"
-                                    exit 0
-                                fi
-                                sleep 5
-                            done
-                            echo "HEALTH CHECK FAILED after 5 attempts"
-                            docker logs student-reg || true
-                            exit 1
-                        REMOTE
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 
+                        "echo 'Polling /health endpoint...' 
+                        for i in 1 2 3 4 5 
+                        do 
+                            echo Attempt \\$i... 
+                            if curl -sf http://localhost:5000/health > /dev/null 
+                            then 
+                                echo 'HEALTH CHECK PASSED'
+                                exit 0
+                            fi 
+                            sleep 5
+                        done 
+                        echo 'HEALTH CHECK FAILED' 
+                        docker logs student-reg || true 
+                        exit 1"
                     """
                 }
             }
